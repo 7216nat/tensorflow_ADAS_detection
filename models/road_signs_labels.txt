@@ -1,0 +1,16 @@
+0  bus
+1  car
+2  motorbike
+3  person
+4  speed_limit_100
+5  speed_limit_120
+6  speed_limit_20
+7  speed_limit_30
+8  speed_limit_40
+9 speed_limit_50
+10  speed_limit_60
+11  speed_limit_70
+12  speed_limit_80
+13  traffic_sign_90
+14  truck
+15  van
