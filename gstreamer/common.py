@@ -12,12 +12,15 @@ EDGETPU_SHARED_LIB = 'libedgetpu.so.1'
 
 def make_interpreter(model_file):
     model_file, *device = model_file.split('@')
-    return tflite.Interpreter(
-      model_path=model_file,
-      experimental_delegates=[
-          tflite.load_delegate(EDGETPU_SHARED_LIB,
-                               {'device': device[0]} if device else {})
-      ])
+    if model_file.contains('edgetpu.tflite'):
+        return tflite.Interpreter(
+            model_path=model_file,
+            experimental_delegates=[
+                tflite.load_delegate(EDGETPU_SHARED_LIB,
+                                     {'device': device[0]} if device else {})
+            ])
+    else:
+        return tflite.Interpreter(model_path=model_file)
 
 def input_image_size(interpreter):
     """Returns input size as (width, height, channels) tuple."""

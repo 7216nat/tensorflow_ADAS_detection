@@ -27,7 +27,6 @@ import os
 import re
 import svgwrite
 import time
-from tracker import ObjectTracker
 
 
 Object = collections.namedtuple('Object', ['id', 'score', 'bbox'])
@@ -104,7 +103,7 @@ def get_output(interpreter, score_threshold, top_k, image_scale=1.0):
 def main():
     default_model_dir = '../models'
     default_model = 'road_signs_quantized_edgetpu.tflite'
-    default_labels = 'road_signs_labels.txt'
+    default_labels = 'road_signs_labels_reduced.txt'
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='.tflite model path',
                         default=os.path.join(default_model_dir, default_model))
