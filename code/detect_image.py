@@ -53,7 +53,7 @@ def get_outputs(interpreter, score_threshold, top_k, image_scale=(1.0, 1.0)):
             score=scores[i],
             bbox=detect.BBox(xmin=xmin, ymin=ymin, xmax=xmax,
                   ymax=ymax).scale(sx, sy).map(int))
-    return [make(i) for i in range(top_k) if scores[i]*100 >= score_threshold]
+    return [make(i) for i in range(top_k) if scores[i] >= score_threshold]
 
 def main():
     default_model_dir = '../models'
@@ -66,7 +66,7 @@ def main():
                         default=os.path.join(default_model_dir, default_labels))
     parser.add_argument('--top_k', type=int, default=3,
                         help='number of categories with highest score to display')
-    parser.add_argument('-t', '--threshold', type=float, default=0.4,
+    parser.add_argument('-t', '--threshold', type=float, default=0.3,
                       help='Score threshold for detected objects')
     parser.add_argument('-o', '--output',
                         help='File path for the result image with annotations')
