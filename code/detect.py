@@ -126,7 +126,7 @@ def get_output(interpreter, score_threshold, top_k, image_scale=1.0):
                       ymin=np.maximum(0.0, ymin),
                       xmax=np.minimum(1.0, xmax),
                       ymax=np.minimum(1.0, ymax)))
-    return [make(i) for i in range(top_k) if scores[i]*100 >= score_threshold]
+    return [make(i) for i in range(top_k) if scores[i] >= score_threshold]
 
 
 def main():
