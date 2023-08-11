@@ -28,9 +28,27 @@ import re
 import svgwrite
 import time
 
-
+import kuksa
+import kuksa_viss_client
 Object = collections.namedtuple('Object', ['id', 'score', 'bbox'])
 
+to_detect = ["person", "bicycle", "car", "motorcycle", "bus", "train", "truck"]
+PATH = "Vehicle.ADAS.ObstacleDetection.IsWarning"
+
+def obstacleDetected():
+    client = kuksa.kuksa_ini()
+    client.setValue(PATH, "true")
+    client.stop()
+
+def noObstacleDetected():
+    client = kuksa.kuksa_ini()
+    client.setValue(PATH, "false")
+    client.stop()
+
+def is_close_by(labels, obj, min_close_by= 0.1, min_height_pct=0.6):
+    x0, y0, x1, y1 = list(obj.bbox)
+    x, y, w, h = x0, y0, x1 - x0, y1 - y0
+    return labels.get(obj.id, obj.id) in to_detect and h > min_height_pct and y1 > min_close_by
 
 def load_labels(path):
     p = re.compile(r'\s*(\d+)(.+)')
@@ -114,9 +132,6 @@ def get_output(interpreter, score_threshold, top_k, image_scale=1.0):
     boxes = common.output_tensor(interpreter,1)
     category_ids = common.output_tensor(interpreter, 3)
     scores = common.output_tensor(interpreter, 0)
-    print(boxes)
-    print(category_ids)
-    print(scores)
     def make(i):
         ymin, xmin, ymax, xmax = boxes[i]
         return Object(
@@ -149,10 +164,13 @@ def main():
                         choices=['raw', 'h264', 'jpeg'])
     parser.add_argument('--do_sink', action="store_true", help='Flag to streanming on X11.',
                         default=False,)
+    parser.add_argument('--do_kuksa', action="store_true", help='Flag to streanming on X11.',
+                        default=False,)
     args = parser.parse_args()
 
     print('Loading {} with {} labels.'.format(args.model, args.labels))
     sink = args.do_sink
+    do_kuksa = args.do_kuksa
     interpreter = common.make_interpreter(args.model)
     interpreter.allocate_tensors()
     labels = load_labels(args.labels)
@@ -187,14 +205,18 @@ def main():
             text_lines = [
                 'Inference: {:.2f} ms'.format((end_time - start_time) * 1000),
                 'FPS: {} fps'.format(round(next(fps_counter))), ]
-        print("len: ", len(objs))
         if len(objs) != 0:
             if not sink:
-                # TODO kuksa actions
+                if do_kuksa:
+                    if any(is_close_by(labels, obj) for obj in objs):
+                        print("obstacle detected !!")
+                        obstacleDetected()
+                    else:
+                        noObstacleDetected()
                 for line in text_lines:
                     print(line)
                 for obj in objs:
-                    print('Item: ', labels.get(obj.id, obj.id), )
+                    print('Item: ', labels.get(obj.id, obj.id))
             else:
                 return generate_svg(src_size, inference_size, inference_box, objs, labels, text_lines)
 
