@@ -35,12 +35,12 @@ Object = collections.namedtuple('Object', ['id', 'score', 'bbox'])
 to_detect = ["person", "bicycle", "car", "motorcycle", "bus", "train", "truck"]
 PATH = "Vehicle.ADAS.ObstacleDetection.IsWarning"
 
-def obstacleDetected():
+def obstacle_detected():
     client = kuksa.kuksa_ini()
     client.setValue(PATH, "true")
     client.stop()
 
-def noObstacleDetected():
+def no_obstacle_detected():
     client = kuksa.kuksa_ini()
     client.setValue(PATH, "false")
     client.stop()
@@ -146,8 +146,8 @@ def get_output(interpreter, score_threshold, top_k, image_scale=1.0):
 
 def main():
     default_model_dir = '../models'
-    default_model = 'road_signs_quantized_edgetpu.tflite'
-    default_labels = 'road_signs_labels_reduced.txt'
+    default_model = 'mobilenet_ssd_coco/tf2_ssd_mobilenet_v2_coco17_ptq_edgetpu.tflite'
+    default_labels = 'mobilenet_ssd_coco/coco_labels.txt'
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='.tflite model path',
                         default=os.path.join(default_model_dir, default_model))
@@ -155,7 +155,7 @@ def main():
                         default=os.path.join(default_model_dir, default_labels))
     parser.add_argument('--top_k', type=int, default=3,
                         help='number of categories with highest score to display')
-    parser.add_argument('--threshold', type=float, default=0.1,
+    parser.add_argument('--threshold', type=float, default=0.5,
                         help='classifier score threshold')
     parser.add_argument('--videosrc', help='Which video source to use. ',
                         default='/dev/video0')
@@ -165,7 +165,7 @@ def main():
     parser.add_argument('--do_sink', action="store_true", help='Flag to streanming on X11.',
                         default=False,)
     parser.add_argument('--do_kuksa', action="store_true", help='Flag to streanming on X11.',
-                        default=False,)
+                        default=True,)
     args = parser.parse_args()
 
     print('Loading {} with {} labels.'.format(args.model, args.labels))
@@ -210,9 +210,9 @@ def main():
                 if do_kuksa:
                     if any(is_close_by(labels, obj) for obj in objs):
                         print("obstacle detected !!")
-                        obstacleDetected()
+                        obstacle_detected()
                     else:
-                        noObstacleDetected()
+                        no_obstacle_detected()
                 for line in text_lines:
                     print(line)
                 for obj in objs:

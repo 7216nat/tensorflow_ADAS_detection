@@ -4,11 +4,9 @@ import kuksa_viss_client
 
 
 def kuksa_ini():
-    config = {"cacertificate": "/etc/kuksa-val/CA.pem",
-        "certificate": "/etc/kuksa-val/Client.pem",
-        "key": "/etc/kuksa-val/Client.key"}
+    config = {"ip": "localhost", "port": 8090, "insecure": False}
     client = kuksa_viss_client.KuksaClientThread(config)
-    with open("../kuksa_certificates/super-admin.json.token", "r") as f:
+    with open("/usr/lib/python3.10/site-packages/kuksa_certificates/jwt/all-read-write.json.token", "r") as f:
         token = f.read()
     client.start()
     client.authorize(token)

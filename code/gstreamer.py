@@ -262,10 +262,13 @@ def run_pipeline(user_function,
                 ! rsvgoverlay name=overlay ! videoconvert ! ximagesink sync=false
                 """
         else: 
-            PIPELINE += """ ! tee name=t
-                t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
+            # PIPELINE += """ ! tee name=t
+            #     t. ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
+            #     ! {sink_caps} ! {sink_element}
+            #     t. ! {leaky_q} ! x264enc ! video/x-h264, stream-format=byte-stream ! rtph264pay ! udpsink host=192.168.1.44 port=9001
+            # """
+            PIPELINE += """ ! {leaky_q} ! videoconvert ! videoscale ! {scale_caps} ! videobox name=box autocrop=true
                 ! {sink_caps} ! {sink_element}
-                t. ! {leaky_q} ! x264enc ! video/x-h264, stream-format=byte-stream ! rtph264pay ! udpsink host=192.168.1.44 port=9001
             """
     SINK_ELEMENT = 'appsink name=appsink emit-signals=true max-buffers=1 drop=true'
     SINK_CAPS = 'video/x-raw,format=RGB,width={width},height={height}'

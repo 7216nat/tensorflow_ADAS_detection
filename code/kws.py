@@ -37,23 +37,23 @@ def getVolume():
   
   if response['data'] and response['data']['dp']:
     val = response['data']['dp']['value']
-    volume = float(val)
+    volume = int(val)
     client.stop()
     return volume
   return None
 
 def volumeUp():
   old_volume = getVolume()
-  if old_volume:
+  if old_volume != None:
     client = kuksa.kuksa_ini()
-    client.setValue(PATH, str(min(old_volume + 10, 100)))
+    client.setValue(PATH, str(int(min(old_volume + 10, 100))))
     client.stop()
 
 def volumeDown():
   old_volume = getVolume()
-  if old_volume:
+  if old_volume != None:
     client = kuksa.kuksa_ini()
-    client.setValue(PATH, str(max(old_volume - 10, 0)))
+    client.setValue(PATH, str(int(max(old_volume - 10, 0))))
     client.stop()
 
 keywords = ["volume_up","volume_down"]
