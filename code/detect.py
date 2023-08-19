@@ -53,12 +53,14 @@ def is_close_by(labels, obj, min_close_by= 0.1, min_height_pct=0.6):
     x, y, w, h = x0, y0, x1 - x0, y1 - y0
     return labels.get(obj.id, obj.id) in to_detect and h > min_height_pct and y1 > min_close_by
 
-def speed_recognize(labels, obj):
-    label = labels.get(obj.id, obj.id)
-    if label in to_recognize.keys():
-        client = kuksa.kuksa_ini()
-        client.setValue(PATH_OBSTACLE, to_recognize[label])
-        client.stop()
+def speed_recognize(labels, objs):
+    for obj in objs:
+        label = labels.get(obj.id, obj.id)
+        if label in to_recognize.keys():
+            client = kuksa.kuksa_ini()
+            client.setValue(PATH_SPEEDDETECTION, to_recognize[label])
+            client.stop()
+            break
     
 def load_labels(path):
     p = re.compile(r'\s*(\d+)(.+)')
@@ -234,7 +236,7 @@ def main():
                         no_obstacle_detected()
                         rt.buzzer = False
                 elif do_recognize:
-                    speed_recognize(objs, labels)
+                    speed_recognize(labels ,objs)
                 for line in text_lines:
                     print(line)
                 for obj in objs:
