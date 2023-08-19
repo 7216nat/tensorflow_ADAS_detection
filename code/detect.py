@@ -30,19 +30,22 @@ import time
 
 import kuksa
 import kuksa_viss_client
+import seeed_python_reterminal.core as rt
 Object = collections.namedtuple('Object', ['id', 'score', 'bbox'])
 
 to_detect = ["person", "bicycle", "car", "motorcycle", "bus", "train", "truck"]
-PATH = "Vehicle.ADAS.ObstacleDetection.IsWarning"
+to_recognize = {"speed_limit_100":"100","speed_limit_120":"120","speed_limit_20":"20","speed_limit_30":"30", "speed_limit_40":"40", "speed_limit_50":"50", "speed_limit_60":"60", "speed_limit_70":"70", "speed_limit_80":"80", "traffic_sign_90":"90"}
+PATH_OBSTACLE = "Vehicle.ADAS.ObstacleDetection.IsWarning"
+PATH_SPEEDDETECTION = "Vehicle.ADAS.SpeedSign"
 
 def obstacle_detected():
     client = kuksa.kuksa_ini()
-    client.setValue(PATH, "true")
+    client.setValue(PATH_OBSTACLE, "true")
     client.stop()
 
 def no_obstacle_detected():
     client = kuksa.kuksa_ini()
-    client.setValue(PATH, "false")
+    client.setValue(PATH_OBSTACLE, "false")
     client.stop()
 
 def is_close_by(labels, obj, min_close_by= 0.1, min_height_pct=0.6):
@@ -50,6 +53,13 @@ def is_close_by(labels, obj, min_close_by= 0.1, min_height_pct=0.6):
     x, y, w, h = x0, y0, x1 - x0, y1 - y0
     return labels.get(obj.id, obj.id) in to_detect and h > min_height_pct and y1 > min_close_by
 
+def speed_recognize(labels, obj):
+    label = labels.get(obj.id, obj.id)
+    if label in to_recognize.keys():
+        client = kuksa.kuksa_ini()
+        client.setValue(PATH_OBSTACLE, to_recognize[label])
+        client.stop()
+    
 def load_labels(path):
     p = re.compile(r'\s*(\d+)(.+)')
     with open(path, 'r', encoding='utf-8') as f:
@@ -164,16 +174,24 @@ def main():
                         choices=['raw', 'h264', 'jpeg'])
     parser.add_argument('--do_sink', action="store_true", help='Flag to streanming on X11.',
                         default=False,)
-    parser.add_argument('--do_kuksa', action="store_true", help='Flag to streanming on X11.',
+    parser.add_argument('--do_detect', action="store_true", help='Flag to detect obstacles.',
                         default=True,)
+    parser.add_argument('--do_recognize', action="store_true", help='Flag to recognize signs.',
+                        default=False,)
     args = parser.parse_args()
 
     print('Loading {} with {} labels.'.format(args.model, args.labels))
     sink = args.do_sink
-    do_kuksa = args.do_kuksa
-    interpreter = common.make_interpreter(args.model)
+    do_detect = False if args.do_recognize else args.do_detect
+    do_recognize = args.do_recognize
+    model_path = args.model
+    labels_path = args.labels
+    if do_recognize:
+        model_path = os.path.join(default_model_dir, 'eficientnet/efficientnet0_edgetpu.tflite')
+        labels_path = os.path.join(default_model_dir, 'road_signs_labels.txt')
+    interpreter = common.make_interpreter(model_path)
     interpreter.allocate_tensors()
-    labels = load_labels(args.labels)
+    labels = load_labels(labels_path)
 
     w, h, _ = common.input_image_size(interpreter)
     inference_size = (w, h)
@@ -207,12 +225,16 @@ def main():
                 'FPS: {} fps'.format(round(next(fps_counter))), ]
         if len(objs) != 0:
             if not sink:
-                if do_kuksa:
+                if do_detect:
                     if any(is_close_by(labels, obj) for obj in objs):
                         print("obstacle detected !!")
                         obstacle_detected()
+                        rt.buzzer = True
                     else:
                         no_obstacle_detected()
+                        rt.buzzer = False
+                elif do_recognize:
+                    speed_recognize(objs, labels)
                 for line in text_lines:
                     print(line)
                 for obj in objs:
