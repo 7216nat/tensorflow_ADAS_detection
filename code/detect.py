@@ -189,7 +189,7 @@ def main():
     model_path = args.model
     labels_path = args.labels
     if do_recognize:
-        model_path = os.path.join(default_model_dir, 'eficientnet/efficientnet0_edgetpu.tflite')
+        model_path = os.path.join(default_model_dir, 'eficientnet/efficientnet0_quantized_edgetpu.tflite')
         labels_path = os.path.join(default_model_dir, 'road_signs_labels.txt')
     interpreter = common.make_interpreter(model_path)
     interpreter.allocate_tensors()
