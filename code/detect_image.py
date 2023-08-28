@@ -87,14 +87,18 @@ def main():
     print('----INFERENCE TIME----')
     print('Note: The first inference is slow because it includes',
             'loading the model into Edge TPU memory.')
-    for _ in range(args.count):
+    interpreter.invoke()
+    suma = 0
+    for _ in range(args.count - 1):
         start = time.perf_counter()
         interpreter.invoke()
         inference_time = time.perf_counter() - start
         objs = get_outputs(interpreter, args.threshold, args.top_k, scale)
         print('%.2f ms' % (inference_time * 1000))
-    
+        suma += (inference_time * 1000)
+    print('tiempo medio: ' + str(suma/(args.count-1)))
     print('-------RESULTS--------')
+
     if not objs:
         print('No objects detected')
 
